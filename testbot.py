@@ -2,6 +2,7 @@ import telebot
 from telebot import types
 from collections import OrderedDict, defaultdict
 import requests
+import os
 
 
 ADRESS, LOCAT, PHOTO = range(3)
@@ -50,7 +51,7 @@ yesornoSelect = types.ReplyKeyboardMarkup(one_time_keyboard=True)
 yesornoSelect.add('Да', 'Нет')
 hideBoard = types.ReplyKeyboardRemove()
 
-TOKEN = open_token("D:\\Users\\Kokoc\\PycharmProjects\\botcoursera\\token_telegram.txt")
+TOKEN = os.getenv("TOKEN", open_token("D:\\Users\\Kokoc\\PycharmProjects\\botcoursera\\token_telegram.txt"))
 bot = telebot.TeleBot(TOKEN)
 
 
