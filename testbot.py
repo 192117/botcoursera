@@ -3,7 +3,6 @@ from telebot import types
 from collections import OrderedDict, defaultdict
 import requests
 
-tok = "D:\\Users\\Kokoc\\PycharmProjects\\botcoursera\\token_telegram.txt"
 
 ADRESS, LOCAT, PHOTO = range(3)
 USER_STATE = defaultdict(lambda: ADRESS)
@@ -51,7 +50,8 @@ yesornoSelect = types.ReplyKeyboardMarkup(one_time_keyboard=True)
 yesornoSelect.add('Да', 'Нет')
 hideBoard = types.ReplyKeyboardRemove()
 
-bot = telebot.TeleBot(open_token(tok))
+TOKEN = open_token("D:\\Users\\Kokoc\\PycharmProjects\\botcoursera\\token_telegram.txt")
+bot = telebot.TeleBot(TOKEN)
 
 
 @bot.message_handler(commands=["start"])
@@ -131,7 +131,7 @@ def handle_photo(message):
                 if user.location[key]["photo"] == "":
                     file_info = bot.get_file(message.photo[-1].file_id)
                     file = requests.get(
-                        'https://api.telegram.org/file/bot{0}/{1}'.format(open_token(tok), file_info.file_path))
+                        'https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))
                     user.location[key]["photo"] = file
     bot.send_message(message.from_user.id, "Добавить адрес?", reply_markup=yesornoSelect)
     bot.register_next_step_handler(message, answer_ask)
