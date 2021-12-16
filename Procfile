@@ -1,1 +1,1 @@
-worker: python testbot.py $PORT
+web: gunicorn run_server:server
