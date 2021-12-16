@@ -3,7 +3,6 @@ from telebot import types
 from collections import OrderedDict, defaultdict
 import requests
 import os
-from flask import Flask, request
 
 
 ADRESS, LOCAT, PHOTO = range(3)
@@ -27,18 +26,16 @@ class User:
 users = list()
 
 commands = {
-    "start"    : "Начало использования бота.",
+    "start"    : "Начать использовать  бота.",
     "add"      : "Добавление нового места.",
     "list"     : "Отображение добавленных мест.",
-    "reset"    : "Позволяет пользователю удалить все его добавленные локации.",
+    "reset"    : "Удалить все добавленные локации.",
     "help"     : "Показать доступные команды.",
 }
-
 
 def open_token(direction):
     with open(direction, "r") as file:
         return file.read()
-
 
 def check_user(user_id):
     for user in users:
@@ -54,20 +51,6 @@ hideBoard = types.ReplyKeyboardRemove()
 
 TOKEN = os.environ["TOKEN"]
 bot = telebot.TeleBot(TOKEN)
-server = Flask(__name__)
-
-@server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    json_string = request.get_data().decode('utf-8')
-    update = types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return "!", 200
-
-@server.route("/")
-def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url="https://remaindlocationbot.herokuapp.com/{}".format(TOKEN))
-    return "!", 200
 
 
 @bot.message_handler(commands=["start"])
@@ -162,4 +145,4 @@ def answer_ask(message):
 
 
 if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+    bot.infinity_polling()

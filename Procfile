@@ -1,1 +1,1 @@
-web: gunicorn testbot:server
+worker: python testbot.py
