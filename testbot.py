@@ -52,7 +52,7 @@ yesornoSelect = types.ReplyKeyboardMarkup(one_time_keyboard=True)
 yesornoSelect.add('Да', 'Нет')
 hideBoard = types.ReplyKeyboardRemove()
 
-TOKEN = os.getenv("TOKEN", open_token("D:\\Users\\Kokoc\\PycharmProjects\\botcoursera\\token_telegram.txt"))
+TOKEN = os.environ["TOKEN"]
 bot = telebot.TeleBot(TOKEN)
 server = Flask(__name__)
 
@@ -66,7 +66,7 @@ def getMessage():
 @server.route("/")
 def webhook():
     bot.remove_webhook()
-    bot.set_webhook(url='https://remaindlocationbot.herokuapp.com/{}'.format(TOKEN))
+    bot.set_webhook(url="https://remaindlocationbot.herokuapp.com/{}".format(TOKEN))
     return "!", 200
 
 
