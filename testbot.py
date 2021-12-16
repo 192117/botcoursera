@@ -72,7 +72,6 @@ def webhook():
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    print(f"New user - {message.from_user.id} - use bot -- function 'send_welcome'")
     check_user(message.from_user.id)
     bot.send_message(message.from_user.id, "Welcome!\nI'm RemainderBot. Let's go!")
     command_help(message)
@@ -160,7 +159,6 @@ def answer_ask(message):
         for user in users:
             if user.user_id == message.from_user.id:
                 user.location.pop(list(user.location.keys())[-1])
-
 
 
 if __name__ == "__main__":
