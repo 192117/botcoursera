@@ -26,10 +26,6 @@ commands = {
 }
 
 
-yesornoSelect = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-yesornoSelect.add('Да', 'Нет')
-hideBoard = types.ReplyKeyboardRemove()
-
 Session = sessionmaker(bind = db)
 session = Session()
 
@@ -111,7 +107,7 @@ def handle_locat(message):
 @bot.message_handler(content_types=["photo"])
 def handle_photo(message):
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
-        if user.photo == None or user.location_latitude == "":
+        if user.photo == None or user.photo == "":
             file_info = bot.get_file(message.photo[-1].file_id)
             file = requests.get(
                 'https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))
