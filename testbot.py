@@ -3,6 +3,8 @@ from telebot import types
 from collections import OrderedDict, defaultdict
 import requests
 import os
+from create_db import *
+from sqlalchemy.orm import sessionmaker
 
 
 ADRESS, LOCAT, PHOTO = range(3)
@@ -15,16 +17,6 @@ def update_state(message, state):
     USER_STATE[message.from_user.id] = state
 
 
-class User:
-
-    location = OrderedDict()
-
-    def __init__(self, user_id):
-        self.user_id = user_id
-
-
-users = list()
-
 commands = {
     "start"    : "Начать использовать  бота.",
     "add"      : "Добавление нового места.",
@@ -33,21 +25,13 @@ commands = {
     "help"     : "Показать доступные команды.",
 }
 
-def open_token(direction):
-    with open(direction, "r") as file:
-        return file.read()
-
-def check_user(user_id):
-    for user in users:
-        if user.user_id == user_id:
-            return user.location
-    else:
-        users.append(User(user_id=user_id))
-
 
 yesornoSelect = types.ReplyKeyboardMarkup(one_time_keyboard=True)
 yesornoSelect.add('Да', 'Нет')
 hideBoard = types.ReplyKeyboardRemove()
+
+Session = sessionmaker(bind = db)
+session = Session()
 
 TOKEN = os.environ["TOKEN"]
 bot = telebot.TeleBot(TOKEN)
@@ -55,7 +39,12 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    check_user(message.from_user.id)
+    if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 0:
+        pass
+    elif len(session.query(User).filter(User.uid == message.from_user.id).all()) == 0:
+        user = User(uid=message.from_user.id)
+        session.add(user)
+        session.commit()
     bot.send_message(message.from_user.id, "Welcome!\nI'm RemainderBot. Let's go!")
     command_help(message)
 
@@ -71,77 +60,65 @@ def command_help(message):
 
 @bot.message_handler(commands=["list"])
 def show_locations(message):
-    locations = check_user(message.from_user.id)
-    if len(locations) == 0:
-        bot.send_message(message.from_user.id, "Нет добавленных адресов")
+    if session.query(User).filter(User.uid == message.from_user.id).all():
+        for user in session.query(User).filter(User.uid == message.from_user.id).all():
+            bot.send_message(message.from_user.id, user.adress)
+            bot.send_location(message.from_user.id, user.location_latitude, user.location_longitude)
+            bot.send_photo(message.from_user.id, user.photo)
     else:
-        for user in users:
-            if user.user_id == message.from_user.id:
-                for key in user.location:
-                    bot.send_message(message.from_user.id, key)
-                    bot.send_location(message.from_user.id, user.location[key]["location"][0], user.location[key]["location"][1])
-                    bot.send_photo(message.from_user.id, user.location[key]["photo"].content)
+        bot.send_message(message.from_user.id, "Нет добавленных адресов.")
 
 
 @bot.message_handler(commands=["reset"])
 def reset_locations(message):
-    for user in users:
-        if user.user_id == message.from_user.id:
-            user.location.clear()
-    bot.send_message(message.from_user.id, "I clean yours locations.")
+    session.query(User).filter(User.uid == message.from_user.id).delete()
+    user = User(uid=message.from_user.id)
+    session.add(user)
+    session.commit()
+    bot.send_message(message.from_user.id, "Я очистил твои лоакции.")
 
 
 @bot.message_handler(commands=["add"])
 def handle_add(message):
-    bot.send_message(message.from_user.id, "Введите адрес")
+    bot.send_message(message.from_user.id, "Введите адрес.")
     update_state(message, ADRESS)
 
 
 @bot.message_handler(func=lambda message: get_state(message) == ADRESS)
 def handle_adress(message):
-    for user in users:
-        if user.user_id == message.from_user.id:
-            user.location[message.text] = dict()
-            user.location[message.text]['location'] = ""
-            user.location[message.text]['photo'] = ""
-    bot.send_message(message.from_user.id, "Отправьте локацию")
+    user = User(uid=message.from_user.id, adress=message.text)
+    session.add(user)
+    session.commit()
+    bot.send_message(message.from_user.id, "Отправьте локацию.")
     update_state(message, LOCAT)
 
 
 @bot.message_handler(func=lambda message: get_state(message) == LOCAT)
 @bot.message_handler(content_types=["location"])
 def handle_locat(message):
-    for user in users:
-        if user.user_id == message.from_user.id:
-            for key in user.location:
-                if len(user.location[key]["location"]) == 0:
-                    user.location[key]["location"] = [message.location.latitude, message.location.longitude]
-    bot.send_message(message.from_user.id, "Отправьте фото")
+    for user in session.query(User).filter(User.uid == message.from_user.id).all():
+        if (user.location_latitude == None or user.location_latitude == "") and (user.location_longitude == None
+                                                                                 or user.location_longitude == ""):
+            user.location_latitude = message.location.latitude
+            user.location_longitude = message.location.longitude
+            session.add(user)
+            session.commit()
+    bot.send_message(message.from_user.id, "Отправьте фото.")
     update_state(message, PHOTO)
 
 
 @bot.message_handler(func=lambda message: get_state(message) == PHOTO)
 @bot.message_handler(content_types=["photo"])
 def handle_photo(message):
-    for user in users:
-        if user.user_id == message.from_user.id:
-            for key in user.location:
-                if user.location[key]["photo"] == "":
-                    file_info = bot.get_file(message.photo[-1].file_id)
-                    file = requests.get(
-                        'https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))
-                    user.location[key]["photo"] = file
-    bot.send_message(message.from_user.id, "Добавить адрес?", reply_markup=yesornoSelect)
-    bot.register_next_step_handler(message, answer_ask)
-
-
-def answer_ask(message):
-    if message.text == "Да":
-        bot.send_message(message.from_user.id, "Добавил!")
-    elif message.text == "Нет":
-        for user in users:
-            if user.user_id == message.from_user.id:
-                user.location.pop(list(user.location.keys())[-1])
+    for user in session.query(User).filter(User.uid == message.from_user.id).all():
+        if user.photo == None or user.location_latitude == "":
+            file_info = bot.get_file(message.photo[-1].file_id)
+            file = requests.get(
+                'https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))
+            user.photo = file
+            session.add(user)
+            session.commit()
+    bot.send_message(message.from_user.id, "Добавил!")
 
 
 if __name__ == "__main__":
