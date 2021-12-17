@@ -59,8 +59,9 @@ def show_locations(message):
     if session.query(User).filter(User.uid == message.from_user.id).all():
         for user in session.query(User).filter(User.uid == message.from_user.id).all():
             bot.send_message(message.from_user.id, user.adress)
-            bot.send_location(message.from_user.id, user.location_latitude, user.location_longitude)
-            bot.send_photo(message.from_user.id, requests.get(user.photo))
+            bot.send_location(message.from_user.id, user.location_longitude, user.location_latitude)
+            file = requests.get(user.photo)
+            bot.send_photo(message.from_user.id, file)
     else:
         bot.send_message(message.from_user.id, "Нет добавленных адресов.")
 
