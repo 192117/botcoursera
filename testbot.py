@@ -82,9 +82,11 @@ def handle_add(message):
 
 @bot.message_handler(func=lambda message: get_state(message) == ADRESS)
 def handle_adress(message):
-    user = User(uid=message.from_user.id, adress=message.text)
-    session.add(user)
-    session.commit()
+    for user in session.query(User).filter(User.uid == message.from_user.id).all():
+        if user.adress == None:
+            user.adress=message.text
+            session.add(user)
+            session.commit()
     bot.send_message(message.from_user.id, "Отправьте локацию.")
     update_state(message, LOCAT)
 
@@ -93,8 +95,7 @@ def handle_adress(message):
 @bot.message_handler(content_types=["location"])
 def handle_locat(message):
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
-        if (user.location_latitude == None or user.location_latitude == "") and (user.location_longitude == None
-                                                                                 or user.location_longitude == ""):
+        if user.location_latitude == None and user.location_longitude == None:
             user.location_latitude = message.location.latitude
             user.location_longitude = message.location.longitude
             session.add(user)
@@ -107,7 +108,7 @@ def handle_locat(message):
 @bot.message_handler(content_types=["photo"])
 def handle_photo(message):
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
-        if user.photo == None or user.photo == "":
+        if user.photo == None:
             file_info = bot.get_file(message.photo[-1].file_id)
             file = requests.get(
                 'https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path))
