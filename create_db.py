@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy import Column, Integer, String, create_engine, Float
 from sqlalchemy.ext.declarative import declarative_base
 import os
 
@@ -16,8 +16,8 @@ class User(Base):
     id = Column(Integer, nullable=False, primary_key=True, unique=True, autoincrement=True)
     uid = Column(Integer, comment="id пользователя с телеграмма.")
     adress = Column(String(254), comment="Адрес точки.")
-    location_latitude = Column(Integer, comment="Широта точки.")
-    location_longitude = Column(Integer, comment="Долгота точки.")
+    location_latitude = Column(Float, comment="Широта точки.")
+    location_longitude = Column(Float, comment="Долгота точки.")
     photo = Column(String, comment="Ссылка на фото.")
 
 

@@ -59,8 +59,8 @@ def show_locations(message):
     if session.query(User).filter(User.uid == message.from_user.id).all():
         for user in session.query(User).filter(User.uid == message.from_user.id).all():
             bot.send_message(message.from_user.id, user.adress)
-            bot.send_location(message.from_user.id, user.location_longitude, user.location_latitude)
-            file = requests.get(user.photo)
+            bot.send_location(message.from_user.id, user.location_latitude, user.location_longitude)
+            file = requests.get(f"https://api.telegram.org/file/bot{}".format(user.photo))
             bot.send_photo(message.from_user.id, file)
     else:
         bot.send_message(message.from_user.id, "Нет добавленных адресов.")
@@ -111,7 +111,7 @@ def handle_photo(message):
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
         if user.photo == None:
             file_info = bot.get_file(message.photo[-1].file_id)
-            file = 'https://api.telegram.org/file/bot{0}/{1}'.format(TOKEN, file_info.file_path)
+            file = '{0}/{1}'.format(TOKEN, file_info.file_path)
             user.photo = file
             session.add(user)
             session.commit()
