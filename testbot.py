@@ -23,7 +23,7 @@ commands = {
     "list"     : "Отображение добавленных мест.",
     "reset"    : "Удалить все добавленные локации.",
     "help"     : "Показать доступные команды.",
-    "delete"   : "Удалить конкретное место.",
+    "delete n"   : "Удалить n-ое место.",
 }
 
 
@@ -59,7 +59,7 @@ def command_help(message):
 def show_locations(message):
     if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 1:
         for user in session.query(User).filter(User.uid == message.from_user.id).all():
-            answer = "Номер записи -" + str(user.id)
+            answer = "Номер записи - " + str(user.id)
             bot.send_message(message.from_user.id, answer)
             bot.send_message(message.from_user.id, user.adress)
             bot.send_location(message.from_user.id, user.location_latitude, user.location_longitude)
@@ -78,13 +78,16 @@ def reset_locations(message):
     user = User(uid=message.from_user.id)
     session.add(user)
     session.commit()
-    bot.send_message(message.from_user.id, "Я очистил твои лоакции.")
+    bot.send_message(message.from_user.id, "Я очистил твои локации.")
 
 
 @bot.message_handler(commands=["delete"])
 def delete_locations(message):
-    session.query(User).filter(User.id == int(message.text)).delete()
-    bot.send_message(message.from_user.id, "Я удалил данную локацию.")
+    if "delete" in message.text:
+        session.query(User).filter(User.id == int(message.text.split(" ")[1])).delete()
+        bot.send_message(message.from_user.id, "Я удалил данную локацию.")
+    else:
+        bot.send_message(message.from_user.id, "Нет номера локации.")
 
 
 @bot.message_handler(commands=["add"])
