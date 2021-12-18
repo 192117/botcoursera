@@ -77,11 +77,17 @@ def reset_locations(message):
 
 @bot.message_handler(commands=["add"])
 def handle_add(message):
-    user = User(uid=message.from_user.id)
-    session.add(user)
-    session.commit()
-    bot.send_message(message.from_user.id, "Введите адрес.")
-    update_state(message, ADRESS)
+    for user in session.query(User).filter(User.uid == message.from_user.id).all():
+        if user.adress == None and user.location_latitude == None \
+                and user.location_longitude == None and user.photo == None:
+            bot.send_message(message.from_user.id, "Введите адрес.")
+            update_state(message, ADRESS)
+        else:
+            user = User(uid=message.from_user.id)
+            session.add(user)
+            session.commit()
+            bot.send_message(message.from_user.id, "Введите адрес.")
+            update_state(message, ADRESS)
 
 
 @bot.message_handler(func=lambda message: get_state(message) == ADRESS)
