@@ -57,7 +57,7 @@ def command_help(message):
 
 @bot.message_handler(commands=["list"])
 def show_locations(message):
-    if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 1:
+    if len(session.query(User).filter(User.uid == message.from_user.id).all()) >= 1:
         for user in session.query(User).filter(User.uid == message.from_user.id).all():
             answer = "Номер записи - " + str(user.id)
             bot.send_message(message.from_user.id, answer)
