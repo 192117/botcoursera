@@ -23,6 +23,7 @@ commands = {
     "list"     : "Отображение добавленных мест.",
     "reset"    : "Удалить все добавленные локации.",
     "help"     : "Показать доступные команды.",
+    "delete"   : "Удалить конкретное место",
 }
 
 
@@ -56,14 +57,18 @@ def command_help(message):
 
 @bot.message_handler(commands=["list"])
 def show_locations(message):
-    if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 0:
+    if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 1:
         for user in session.query(User).filter(User.uid == message.from_user.id).all():
+            bot.send_message(message.from_user.id, f"Номер адреса - {}".format(user.id))
             bot.send_message(message.from_user.id, user.adress)
             bot.send_location(message.from_user.id, user.location_latitude, user.location_longitude)
             photo_file = requests.get(user.photo)
             bot.send_photo(message.from_user.id, photo_file.content)
     else:
-        bot.send_message(message.from_user.id, "Нет добавленных адресов.")
+        user = session.query(User).filter(User.uid == message.from_user.id).one()
+        if user.adress == None and user.location_latitude == None \
+            and user.location_longitude == None and user.photo == None:
+                bot.send_message(message.from_user.id, "Нет добавленных адресов.")
 
 
 @bot.message_handler(commands=["reset"])
@@ -73,6 +78,12 @@ def reset_locations(message):
     session.add(user)
     session.commit()
     bot.send_message(message.from_user.id, "Я очистил твои лоакции.")
+
+
+@bot.message_handler(commands=["delete"])
+def delete_locations(message):
+    session.query(User).filter(User.id == int(message.text)).delete()
+    bot.send_message(message.from_user.id, "Я удалил данную локацию.")
 
 
 @bot.message_handler(commands=["add"])
