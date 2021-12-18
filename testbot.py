@@ -84,7 +84,8 @@ def reset_locations(message):
 @bot.message_handler(commands=["delete"])
 def delete_locations(message):
     if "delete" in message.text:
-        session.query(User).filter(User.id == int(message.text.split(" ")[1])).delete()
+        session.query(User).filter(User.id == int(message.text.split()[1])).delete()
+        session.commit()
         bot.send_message(message.from_user.id, "Я удалил данную локацию.")
     else:
         bot.send_message(message.from_user.id, "Нет номера локации.")
