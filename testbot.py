@@ -70,6 +70,13 @@ def show_locations(message):
         if user.adress == None and user.location_latitude == None \
             and user.location_longitude == None and user.photo == None:
                 bot.send_message(message.from_user.id, "Нет добавленных адресов.")
+        else:
+            answer = "Номер записи - " + str(user.id)
+            bot.send_message(message.from_user.id, answer)
+            bot.send_message(message.from_user.id, user.adress)
+            bot.send_location(message.from_user.id, user.location_latitude, user.location_longitude)
+            photo_file = requests.get(user.photo)
+            bot.send_photo(message.from_user.id, photo_file.content)
 
 
 @bot.message_handler(commands=["reset"])
