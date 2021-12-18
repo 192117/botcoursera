@@ -23,7 +23,7 @@ commands = {
     "list"     : "Отображение добавленных мест.",
     "reset"    : "Удалить все добавленные локации.",
     "help"     : "Показать доступные команды.",
-    "delete"   : "Удалить конкретное место",
+    "delete"   : "Удалить конкретное место.",
 }
 
 
@@ -59,7 +59,8 @@ def command_help(message):
 def show_locations(message):
     if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 1:
         for user in session.query(User).filter(User.uid == message.from_user.id).all():
-            bot.send_message(message.from_user.id, f"Номер адреса - {}".format(user.id))
+            answer = "Номер записи -" + str(user.id)
+            bot.send_message(message.from_user.id, answer)
             bot.send_message(message.from_user.id, user.adress)
             bot.send_location(message.from_user.id, user.location_latitude, user.location_longitude)
             photo_file = requests.get(user.photo)
