@@ -36,6 +36,9 @@ bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=["start"])
 def start(message):
+    '''
+        Получая от пользователя команду /start проверяем, его в БД. Если его нет, то добавляем его по user_id.
+    '''
     if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 0:
         pass
     elif len(session.query(User).filter(User.uid == message.from_user.id).all()) == 0:
@@ -48,6 +51,9 @@ def start(message):
 
 @bot.message_handler(commands=["help"])
 def command_help(message):
+    '''
+        По команде /help отправляем все доступные команды.
+    '''
     help_text = "The following commands are available: \n"
     for key in commands:
         help_text += "/" + key + ": "
@@ -57,6 +63,9 @@ def command_help(message):
 
 @bot.message_handler(commands=["list"])
 def show_locations(message):
+    '''
+        Выводим пользователю все его добавленные локации.
+    '''
     if len(session.query(User).filter(User.uid == message.from_user.id).all()) > 1:
         for user in session.query(User).filter(User.uid == message.from_user.id).all():
             answer = "Номер записи - " + str(user.id)
@@ -81,6 +90,9 @@ def show_locations(message):
 
 @bot.message_handler(commands=["reset"])
 def reset_locations(message):
+    '''
+        Сбрасываем все лоакции, добавленные пользователем.
+    '''
     session.query(User).filter(User.uid == message.from_user.id).delete()
     user = User(uid=message.from_user.id)
     session.add(user)
@@ -90,6 +102,9 @@ def reset_locations(message):
 
 @bot.message_handler(commands=["delete"])
 def delete_locations(message):
+    '''
+        Удаляем локацию под переданным номером.
+    '''
     if "delete" in message.text:
         session.query(User).filter(User.id == int(message.text.split()[1])).delete()
         session.commit()
@@ -100,6 +115,10 @@ def delete_locations(message):
 
 @bot.message_handler(commands=["add"])
 def handle_add(message):
+    '''
+        Функция для добавления точки. Проходит с использованием состояний ADRESS, LOCAT, PHOTO для запоминания
+        предыдущих ответов.
+    '''
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
         if user.adress == None and user.location_latitude == None \
                 and user.location_longitude == None and user.photo == None:
@@ -115,6 +134,9 @@ def handle_add(message):
 
 @bot.message_handler(func=lambda message: get_state(message) == ADRESS)
 def handle_adress(message):
+    '''
+        Получение адреса/кодового слова.
+    '''
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
         if user.adress == None:
             user.adress=message.text
@@ -127,6 +149,9 @@ def handle_adress(message):
 @bot.message_handler(func=lambda message: get_state(message) == LOCAT)
 @bot.message_handler(content_types=["location"])
 def handle_locat(message):
+    '''
+        Получение локации через функцию телеграмма поделиться геопозицией.:
+    '''
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
         if user.location_latitude == None and user.location_longitude == None:
             user.location_latitude = message.location.latitude
@@ -140,6 +165,9 @@ def handle_locat(message):
 @bot.message_handler(func=lambda message: get_state(message) == PHOTO)
 @bot.message_handler(content_types=["photo"])
 def handle_photo(message):
+    '''
+        Обработка фотографии.
+    '''
     for user in session.query(User).filter(User.uid == message.from_user.id).all():
         if user.photo == None:
             file_info = bot.get_file(message.photo[-1].file_id)
